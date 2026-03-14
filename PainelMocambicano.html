@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Painel Mocambicano</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+
+/* FUNDO ANIMADO */
+body{
+  color:#fff;font-family:Arial,sans-serif;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;padding:12px;
+  background:#060606;overflow:hidden;
+}
+
+/* PARTICULAS */
+.bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* ONDAS DE FUNDO */
+.wave{
+  position:fixed;border-radius:50%;opacity:.04;
+  animation:expand 4s ease-out infinite;
+  pointer-events:none;z-index:0;
+}
+.wave:nth-child(1){width:300px;height:300px;background:#ff0033;top:20%;left:10%;animation-delay:0s;}
+.wave:nth-child(2){width:200px;height:200px;background:#ff0033;top:60%;right:5%;animation-delay:1.5s;}
+.wave:nth-child(3){width:250px;height:250px;background:#ff0033;bottom:10%;left:30%;animation-delay:3s;}
+@keyframes expand{0%{transform:scale(.8);opacity:.06;}50%{transform:scale(1.2);opacity:.02;}100%{transform:scale(.8);opacity:.06;}}
+
+/* GRID */
+.grid-bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,0,51,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,0,51,.05) 1px,transparent 1px);
+  background-size:28px 28px;
+  animation:gridMove 8s linear infinite;
+}
+@keyframes gridMove{0%{background-position:0 0;}100%{background-position:28px 28px;}}
+
+/* CONTEUDO SOBRE O FUNDO */
+#app{position:relative;z-index:1;width:100%;max-width:340px;}
+
+/* ===== TELA DE SENHA ===== */
+#lock-screen{
+  background:rgba(10,10,10,.95);border-radius:14px;
+  border:1.5px solid #ff0033;
+  box-shadow:0 0 30px rgba(255,0,51,.3),0 0 60px rgba(0,0,0,.8);
+  padding:30px 20px;text-align:center;
+  backdrop-filter:blur(10px);
+}
+.lock-icon{font-size:44px;margin-bottom:12px;animation:float 3s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+.lock-title{font-size:18px;font-weight:900;letter-spacing:3px;color:#ff0033;text-transform:uppercase;margin-bottom:4px;text-shadow:0 0 16px rgba(255,0,51,.6);}
+.lock-sub{font-size:11px;color:#555;letter-spacing:2px;margin-bottom:20px;}
+.lock-input{
+  width:100%;padding:11px 14px;background:#181818;color:#fff;
+  border:1.5px solid #333;border-radius:9px;font-size:15px;
+  font-weight:700;outline:none;text-align:center;letter-spacing:3px;margin-bottom:8px;
+}
+.lock-input:focus{border-color:#ff0033;box-shadow:0 0 8px rgba(255,0,51,.3);}
+.btn-enter{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,#ff0033,#990020);
+  color:#fff;border:none;border-radius:9px;font-size:14px;
+  font-weight:900;text-transform:uppercase;letter-spacing:1px;cursor:pointer;
+  margin-bottom:6px;transition:all .2s;
+  box-shadow:0 4px 16px rgba(255,0,51,.4);
+}
+.btn-enter:hover{box-shadow:0 4px 24px rgba(255,0,51,.7);}
+.erro{font-size:11px;color:#ff0033;height:16px;letter-spacing:1px;}
+
+/* ===== PAINEL ===== */
+#painel{display:none;}
+.card{
+  background:rgba(10,10,10,.95);border-radius:14px;
+  border:1.5px solid #ff0033;
+  box-shadow:0 0 30px rgba(255,0,51,.25),0 0 60px rgba(0,0,0,.8);
+  overflow:hidden;backdrop-filter:blur(10px);
+}
+.top{
+  background:linear-gradient(135deg,rgba(26,0,8,.95),rgba(13,13,13,.95));
+  padding:14px 16px 10px;border-bottom:1px solid #222;text-align:center;
+}
+.top-title{
+  font-size:19px;font-weight:900;letter-spacing:3px;
+  color:#ff0033;text-transform:uppercase;
+  text-shadow:0 0 18px rgba(255,0,51,.7);
+  animation:pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{text-shadow:0 0 18px rgba(255,0,51,.7);}50%{text-shadow:0 0 30px rgba(255,0,51,1),0 0 50px rgba(255,0,51,.4);}}
+.top-sub{font-size:10px;color:#555;letter-spacing:2px;margin-top:3px;text-transform:uppercase;}
+.top-badge{
+  display:inline-flex;align-items:center;gap:5px;margin-top:8px;
+  font-size:11px;color:#00ffaa;background:#0a1a14;
+  padding:3px 10px;border-radius:20px;border:1px solid rgba(0,255,170,.2);
+}
+.top-dot{width:6px;height:6px;border-radius:50%;background:#00ffaa;box-shadow:0 0 6px #00ffaa;animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.tabs{display:flex;background:#0a0a0a;border-bottom:1px solid #222;}
+.tab-btn{
+  flex:1;padding:9px 4px;font-size:11px;font-weight:700;
+  color:#555;background:none;border:none;cursor:pointer;
+  text-transform:uppercase;letter-spacing:.5px;transition:all .2s;
+  border-bottom:2px solid transparent;
+}
+.tab-btn.on{color:#ff0033;border-bottom:2px solid #ff0033;background:#110008;}
+.content{padding:14px;}
+.page{display:none;}
+.page.on{display:block;}
+.op{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 12px;border-radius:9px;background:#181818;
+  border:1px solid #222;margin-bottom:8px;cursor:pointer;
+  transition:all .2s;flex-wrap:wrap;
+}
+.op:hover{border-color:rgba(255,0,51,.4);}
+.op.on{border-color:#ff0033;background:#1a0008;}
+.op-left{display:flex;align-items:center;gap:10px;}
+.op-icon{font-size:16px;width:22px;text-align:center;}
+.op-name{font-size:13px;font-weight:700;}
+.op-desc{font-size:10px;color:#555;margin-top:1px;}
+.sw{width:36px;height:20px;background:#333;border-radius:10px;position:relative;transition:.25s;flex-shrink:0;}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#666;transition:.25s;}
+.op.on .sw{background:#ff0033;box-shadow:0 0 8px rgba(255,0,51,.6);}
+.op.on .sw::after{left:19px;background:#fff;}
+.slider-wrap{width:100%;padding:2px 0 4px;display:none;padding-left:32px;}
+.op.on .slider-wrap{display:block;}
+.slider-row{display:flex;align-items:center;gap:8px;margin-top:6px;}
+.slider-label{font-size:11px;color:#888;white-space:nowrap;}
+.slider-val{font-size:12px;color:#ff0033;font-weight:800;min-width:30px;text-align:right;}
+input[type=range]{flex:1;appearance:none;height:3px;background:#333;border-radius:2px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border-radius:50%;background:#ff0033;box-shadow:0 0 5px rgba(255,0,51,.7);cursor:pointer;}
+.sel-wrap{width:100%;padding:4px 0 2px;display:none;padding-left:32px;}
+.op.on .sel-wrap{display:block;}
+select{width:100%;padding:7px 10px;background:#111;color:#fff;border:1px solid #333;border-radius:7px;font-size:12px;outline:none;cursor:pointer;margin-top:6px;}
+select:focus{border-color:#ff0033;}
+.status-box{
+  background:#0a0a0a;border:1px solid #1a1a1a;border-radius:9px;
+  padding:10px 12px;font-size:10px;font-family:'Courier New',monospace;
+  color:#00ffaa;max-height:90px;overflow-y:auto;margin-top:4px;
+}
+.status-box div{line-height:1.8;}
+.status-box .w{color:#ffaa00;}
+.inj-area{padding:12px 14px 14px;border-top:1px solid #1a1a1a;background:rgba(10,10,10,.95);}
+.inj-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.btn{padding:12px 8px;border-radius:9px;border:none;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;transition:all .2s;}
+.btn-ff{background:linear-gradient(135deg,#ff0033,#990020);color:#fff;box-shadow:0 4px 16px rgba(255,0,51,.4);}
+.btn-ff:hover{box-shadow:0 4px 24px rgba(255,0,51,.7);}
+.btn-max{background:#111;color:#ff6600;border:1.5px solid #ff6600;}
+.inj-status{text-align:center;font-size:11px;color:#555;letter-spacing:1px;}
+.inj-status.ok{color:#00ffaa;}
+.toast{
+  position:fixed;bottom:80px;left:50%;
+  transform:translateX(-50%) translateY(10px);
+  background:rgba(26,0,8,.95);border:1px solid #ff0033;
+  color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;
+  opacity:0;transition:.3s;z-index:999;pointer-events:none;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- FUNDO ANIMADO -->
+<div class="grid-bg"></div>
+<div class="wave"></div>
+<div class="wave"></div>
+<div class="wave"></div>
+<canvas class="bg-canvas" id="canvas"></canvas>
+
+<div class="toast" id="toast"></div>
+
+<div id="app">
+
+  <!-- TELA DE SENHA -->
+  <div id="lock-screen">
+    <div class="lock-icon">&#128274;</div>
+    <div class="lock-title">Painel Mocambicano</div>
+    <div class="lock-sub">Insira a Key para continuar</div>
+    <input class="lock-input" type="password" id="senha-input" placeholder="••••••••" maxlength="30"
+      onkeydown="if(event.key==='Enter')verificar()">
+    <button class="btn-enter" onclick="verificar()">ENTRAR</button>
+    <div class="erro" id="erro-msg"></div>
+  </div>
+
+  <!-- PAINEL -->
+  <div id="painel">
+  <div class="card">
+    <div class="top">
+      <div class="top-title">&#127474;&#127487; Painel Mocambicano</div>
+      <div class="top-sub">Free Fire · Unified Panel · v3.0</div>
+      <div class="top-badge"><span class="top-dot"></span> ONLINE</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn on" onclick="mudarTab(this,'t1')">&#127919; Aim</button>
+      <button class="tab-btn" onclick="mudarTab(this,'t2')">&#9889; Funções</button>
+      <button class="tab-btn" onclick="mudarTab(this,'t3')">&#8505; Info</button>
+    </div>
+    <div class="content">
+
+      <!-- AIM -->
+      <div class="page on" id="t1">
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#127919;</span><div><div class="op-name">Aimbot</div><div class="op-desc">Assistência de mira automática</div></div></div>
+          <div class="sw"></div>
+        </div>
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#128274;</span><div><div class="op-name">AimLock</div><div class="op-desc">Trava na cabeça do inimigo</div></div></div>
+          <div class="sw"></div>
+        </div>
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#128308;</span><div><div class="op-name">FOV</div><div class="op-desc">Raio de detecção do aim</div></div></div>
+          <div class="sw"></div>
+          <div class="slider-wrap" onclick="event.stopPropagation()">
+            <div class="slider-row">
+              <span class="slider-label">FOV</span>
+              <input type="range" min="1" max="10" value="5" oninput="document.getElementById('fov-val').textContent=this.value">
+              <span class="slider-val" id="fov-val">5</span>
+            </div>
+          </div>
+        </div>
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#9757;</span><div><div class="op-name">Alvo</div><div class="op-desc">Parte do corpo a mirar</div></div></div>
+          <div class="sw"></div>
+          <div class="sel-wrap" onclick="event.stopPropagation()">
+            <select><option>Cabeça (Head)</option><option>Pescoço</option><option>Peito</option></select>
+          </div>
+        </div>
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#128200;</span><div><div class="op-name">HS Rate</div><div class="op-desc">Taxa de headshot</div></div></div>
+          <div class="sw"></div>
+          <div class="slider-wrap" onclick="event.stopPropagation()">
+            <div class="slider-row">
+              <span class="slider-label">Nível</span>
+              <input type="range" min="1" max="100" value="50" oninput="document.getElementById('hs-val').textContent=this.value+'%'">
+              <span class="slider-val" id="hs-val">50%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FUNÇÕES -->
+      <div class="page" id="t2">
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#128640;</span><div><div class="op-name">+120 FPS</div><div class="op-desc">Boost máximo de frames</div></div></div>
+          <div class="sw"></div>
+        </div>
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#10134;</span><div><div class="op-name">Sem Recuo</div><div class="op-desc">Remove recuo da arma</div></div></div>
+          <div class="sw"></div>
+        </div>
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#128246;</span><div><div class="op-name">Sensibilidade</div><div class="op-desc">Ajuste de sensibilidade</div></div></div>
+          <div class="sw"></div>
+          <div class="slider-wrap" onclick="event.stopPropagation()">
+            <div class="slider-row">
+              <span class="slider-label">Sensi</span>
+              <input type="range" min="1" max="10" value="5" oninput="document.getElementById('sensi-val').textContent=this.value">
+              <span class="slider-val" id="sensi-val">5</span>
+            </div>
+          </div>
+        </div>
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#128168;</span><div><div class="op-name">Anti-Lag</div><div class="op-desc">Reduz lag do jogo</div></div></div>
+          <div class="sw"></div>
+        </div>
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#128293;</span><div><div class="op-name">Puxada Cabeça</div><div class="op-desc">Força mira para cima</div></div></div>
+          <div class="sw"></div>
+        </div>
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#9889;</span><div><div class="op-name">Modo de Jogo</div><div class="op-desc">Perfil de configuração</div></div></div>
+          <div class="sw"></div>
+          <div class="sel-wrap" onclick="event.stopPropagation()">
+            <select><option>Agressivo</option><option>Sniper</option><option>Rush</option><option>Suporte</option></select>
+          </div>
+        </div>
+        <div class="op" onclick="toggle(this)">
+          <div class="op-left"><span class="op-icon">&#128190;</span><div><div class="op-name">Regedit Mobile</div><div class="op-desc">Otimiza registros do dispositivo</div></div></div>
+          <div class="sw"></div>
+        </div>
+      </div>
+
+      <!-- INFO -->
+      <div class="page" id="t3">
+        <div class="status-box" id="log">
+          <div>&gt; Painel Mocambicano v3.0</div>
+          <div>&gt; 7 paineis unificados.</div>
+          <div class="w">&gt; Aguardando injecao...</div>
+          <div>&gt; Key: Adesivo</div>
+          <div>&gt; Expira: 31/12/2026</div>
+          <div>&gt; Modelo: <span id="modelo">Android</span></div>
+        </div>
+        <div style="margin-top:12px;font-size:11px;line-height:2;color:#444;background:#111;border-radius:8px;padding:10px;border:1px solid #1a1a1a;">
+          <span style="color:#ff0033;font-weight:700;">Developer:</span><br>
+          <span style="color:#fff;font-weight:700;font-size:13px;">Macabra_xr</span><br><br>
+          <span style="color:#ff0033;font-weight:700;">Creditos:</span><br>
+          @LUXECHEATS · @CHZIOSS · Sistema Red<br>
+          MangaFlix · Truques Goleiros<br>
+          Analista Enfermagem · Belecal Sinha
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:#555;background:#111;border-radius:8px;padding:10px;border:1px solid #1a1a1a;">
+          <span style="color:#ffaa00;font-weight:700;">&#9888; Dica:</span> Ative as funcoes no <b style="color:#fff">Treinamento</b> antes de jogar!
+        </div>
+      </div>
+
+    </div>
+    <div class="inj-area">
+      <div class="inj-grid">
+        <button class="btn btn-ff" onclick="injetar('FF')">&#9654; INJETAR FF</button>
+        <button class="btn btn-max" onclick="injetar('FF MAX')">&#128293; FF MAX</button>
+      </div>
+      <div class="inj-status" id="inj-status">Aguardando injecao...</div>
+    </div>
+  </div>
+  </div>
+
+</div>
+
+<script>
+// PARTICULAS NO CANVAS
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+window.addEventListener('resize', function(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+
+var particles = [];
+for(var i=0;i<60;i++){
+  particles.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    r: Math.random()*1.5+0.5,
+    dx: (Math.random()-.5)*.4,
+    dy: (Math.random()-.5)*.4,
+    o: Math.random()*.5+.1
+  });
+}
+function drawParticles(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(function(p){
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,0,51,'+p.o+')';
+    ctx.fill();
+    p.x+=p.dx; p.y+=p.dy;
+    if(p.x<0||p.x>canvas.width) p.dx*=-1;
+    if(p.y<0||p.y>canvas.height) p.dy*=-1;
+  });
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// SENHA
+var tentativas = 0;
+function verificar(){
+  var input = document.getElementById('senha-input').value;
+  var erro = document.getElementById('erro-msg');
+  if(input === 'Adesivo'){
+    document.getElementById('lock-screen').style.display='none';
+    document.getElementById('painel').style.display='block';
+    mostrarToast('Bem-vindo! Acesso autorizado. ✓');
+  } else {
+    tentativas++;
+    document.getElementById('senha-input').value='';
+    if(tentativas>=3){
+      erro.textContent='Bloqueado por 5 segundos!';
+      document.getElementById('senha-input').disabled=true;
+      setTimeout(function(){tentativas=0;document.getElementById('senha-input').disabled=false;erro.textContent='';},5000);
+    } else {
+      erro.textContent='Key incorreta! ('+tentativas+'/3)';
+      setTimeout(function(){erro.textContent='';},1500);
+    }
+  }
+}
+
+function mudarTab(btn,id){
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
+  btn.classList.add('on');
+  document.getElementById(id).classList.add('on');
+}
+
+function toggle(el){
+  el.classList.toggle('on');
+  var nome=el.querySelector('.op-name').textContent;
+  var estado=el.classList.contains('on')?'ON':'OFF';
+  mostrarToast(nome+' → '+estado);
+  addLog(nome+': '+estado);
+}
+
+var timInj;
+function injetar(tipo){
+  var s=document.getElementById('inj-status');
+  s.textContent='Injetando no '+tipo+'...';
+  s.className='inj-status';
+  mostrarToast('Injetando no '+tipo+'...');
+  clearTimeout(timInj);
+  timInj=setTimeout(function(){
+    s.textContent='Funcoes ativadas no '+tipo+'! ✓';
+    s.className='inj-status ok';
+    addLog('Injecao '+tipo+' OK!','ok');
+    mostrarToast('Injecao completa! ✓');
+  },2000);
+}
+
+function addLog(msg,tipo){
+  var c=document.getElementById('log');
+  var d=document.createElement('div');
+  var n=new Date();
+  var h=n.getHours().toString().padStart(2,'0');
+  var m=n.getMinutes().toString().padStart(2,'0');
+  d.textContent='> ['+h+':'+m+'] '+msg;
+  if(tipo==='ok') d.style.color='#00ffaa';
+  c.appendChild(d);
+  c.scrollTop=c.scrollHeight;
+}
+
+var timToast;
+function mostrarToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(timToast);
+  timToast=setTimeout(function(){t.classList.remove('show');},2200);
+}
+
+document.getElementById('modelo').textContent=/iPhone|iPad/i.test(navigator.userAgent)?'iOS':'Android';
+</script>
+</body>
+</html>
